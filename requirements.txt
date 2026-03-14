@@ -1,3 +1,5 @@
-fastapi 
+fastapi
 uvicorn
 psutil
+pytest
+httpx
