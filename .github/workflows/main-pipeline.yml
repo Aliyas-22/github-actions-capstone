@@ -24,28 +24,36 @@ jobs:
         runs-on: ubuntu-latest
         environment: production
         steps:
-            - name: install docker and deploy to ec2
+            - name: install docker and setup folders
               uses: appleboy/ssh-action@v1
               with:
                   host: ${{ secrets.EC2_HOST }}
                   username: ubuntu
                   key: ${{ secrets.EC2_SSH_KEY }}
                   script: |
-                      echo "Installing Docker..."
-                      sudo apt-get update && sudo apt-get install docker.io -y
-                      sudo usermod -aG docker ubuntu
-                      sudo systemctl start docker
-                      sudo systemctl enable docker
-                      echo "Docker installed successfully!"
+                      echo "Installing required packages & folders"
+                      sudo apt-get update && sudo apt-get install docker.io docker-compose-v2 -y
+                      sudo usermod -aG docker $USER
+                      mkdir -p devops
 
-                      echo "Pulling latest image..."
-                      sudo docker pull ${{ vars.DOCKERHUB_USERNAME }}/github-advanced-action-capstone:latest
+            - name: copy docker-compose file to ec2
+              uses: appleboy/scp-action@v1
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ubuntu
+                  key: ${{ secrets.EC2_SSH_KEY }}
+                  source: docker-compose.yml
+                  target: ~/devops
 
-                      echo "Stopping old container..."
-                      sudo docker stop myapp || true
-                      sudo docker rm myapp || true
-
-                      echo "Starting new container..."
-                      sudo docker run -d -p 8000:8000 --name myapp ${{ vars.DOCKERHUB_USERNAME }}/github-advanced-action-capstone:latest
-
-                      echo "✅ Deployed successfully!"
+            - name: deploy the app
+              uses: appleboy/ssh-action@v1
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ubuntu
+                  key: ${{ secrets.EC2_SSH_KEY }}
+                  script: |
+                      cd ~/devops
+                      sudo docker compose pull
+                      sudo docker compose down || true
+                      sudo docker compose up -d
+                      echo " Deployed successfully!"

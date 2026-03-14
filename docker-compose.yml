@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  myapp:
+    image: aliyafirdous22/github-advanced-action-capstone:latest
+    container_name: myapp
+    ports:
+      - "8000:8000"
+    restart: always
