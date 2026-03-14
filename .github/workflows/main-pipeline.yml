@@ -24,15 +24,28 @@ jobs:
         runs-on: ubuntu-latest
         environment: production
         steps:
-            - name: deploy to ec2
+            - name: install docker and deploy to ec2
               uses: appleboy/ssh-action@v1
               with:
                   host: ${{ secrets.EC2_HOST }}
                   username: ubuntu
                   key: ${{ secrets.EC2_SSH_KEY }}
                   script: |
-                      docker pull ${{ vars.DOCKERHUB_USERNAME }}/github-advanced-action-capstone:latest
-                      docker stop myapp || true
-                      docker rm myapp || true
-                      docker run -d -p 8000:8000 --name myapp ${{ vars.DOCKERHUB_USERNAME }}/github-advanced-action-capstone:latest
-                      echo " deployed successfully!"
+                      echo "Installing Docker..."
+                      sudo apt-get update && sudo apt-get install docker.io -y
+                      sudo usermod -aG docker ubuntu
+                      sudo systemctl start docker
+                      sudo systemctl enable docker
+                      echo "Docker installed successfully!"
+
+                      echo "Pulling latest image..."
+                      sudo docker pull ${{ vars.DOCKERHUB_USERNAME }}/github-advanced-action-capstone:latest
+
+                      echo "Stopping old container..."
+                      sudo docker stop myapp || true
+                      sudo docker rm myapp || true
+
+                      echo "Starting new container..."
+                      sudo docker run -d -p 8000:8000 --name myapp ${{ vars.DOCKERHUB_USERNAME }}/github-advanced-action-capstone:latest
+
+                      echo "✅ Deployed successfully!"
