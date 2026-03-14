@@ -1,6 +1,6 @@
 
 [![main pipeline](https://github.com/Aliyas-22/github-actions-capstone/actions/workflows/main-pipeline.yml/badge.svg)](https://github.com/Aliyas-22/github-actions-capstone/actions/workflows/main-pipeline.yml)
-
+```
 PR Opened
    ↓
 CI Pipeline
@@ -23,5 +23,5 @@ Deploy to Production
 Notifications
    ↓
 Rollback (if failure)
-
+```
 
