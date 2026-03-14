@@ -38,16 +38,6 @@ jobs:
                       sudo apt-get update && sudo apt-get install docker.io docker-compose-v2 -y
                       sudo usermod -aG docker $USER
                       mkdir -p devops
-
-            - name: copy docker-compose file to ec2
-              uses: appleboy/scp-action@v1
-              with:
-                  host: ${{ secrets.EC2_HOST }}
-                  username: ubuntu
-                  key: ${{ secrets.EC2_SSH_KEY }}
-                  source: docker-compose.yml
-                  target: ~/devops
-
             - name: deploy the app
               uses: appleboy/ssh-action@v1
               with:
@@ -58,7 +48,11 @@ jobs:
                       echo "Running App"
                       echo ${{ secrets.DOCKER_TOKEN }} | sudo docker login --username ${{ vars.DOCKERHUB_USERNAME }} --password-stdin
                       cd ~/devops
+                      echo "Pulling latest image..."
                       sudo docker compose pull
+                      echo "Stopping and removing old container..."
                       sudo docker compose down || true
-                      sudo docker compose up -d
+                      sudo docker rmi aliyafirdous22/github-advanced-action-capstone:latest || true
+                      echo "Rebuilding and starting fresh container..."
+                      sudo docker compose up -d --force-recreate
                       echo " Deployed successfully!"
