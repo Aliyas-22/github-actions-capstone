@@ -1,0 +1,29 @@
+name: main pipeline
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    build-test:
+        uses: ./.github/workflows/reusable-build-test.yml
+        with:
+            python_version: "3.14"
+            run_tests: true
+
+    docker:
+        needs: build-test
+        uses: ./.github/workflows/reusable-docker.yml
+        secrets:
+            docker_username: ${{ secrets.DOCKER_USERNAME }}
+            docker_token: ${{ secrets.DOCKER_TOKEN }}
+
+    deploy:
+        needs: docker
+        runs-on: ubuntu-latest
+        environment: production
+        steps:
+            - name: deploy image to production
+              run: |
+                  echo "Deploying image: ${{ vars.DOCKERHUB_USERNAME }}/github-advanced-action-capstone:sha-${GITHUB_SHA::7} to production"
