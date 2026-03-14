@@ -24,6 +24,9 @@ jobs:
         runs-on: ubuntu-latest
         environment: production
         steps:
+            - name: checkout code
+              uses: actions/checkout@v4
+
             - name: install docker and setup folders
               uses: appleboy/ssh-action@v1
               with:
@@ -52,6 +55,8 @@ jobs:
                   username: ubuntu
                   key: ${{ secrets.EC2_SSH_KEY }}
                   script: |
+                      echo "Running App"
+                      echo ${{ secrets.DOCKER_TOKEN }} | sudo docker login --username ${{ vars.DOCKERHUB_USERNAME }} --password-stdin
                       cd ~/devops
                       sudo docker compose pull
                       sudo docker compose down || true
