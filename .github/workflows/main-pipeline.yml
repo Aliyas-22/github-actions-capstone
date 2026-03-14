@@ -24,6 +24,15 @@ jobs:
         runs-on: ubuntu-latest
         environment: production
         steps:
-            - name: deploy image to production
-              run: |
-                  echo "Deploying image: ${{ vars.DOCKERHUB_USERNAME }}/github-advanced-action-capstone:sha-${GITHUB_SHA::7} to production"
+            - name: deploy to ec2
+              uses: appleboy/ssh-action@v1
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ubuntu
+                  key: ${{ secrets.EC2_SSH_KEY }}
+                  script: |
+                      docker pull ${{ vars.DOCKERHUB_USERNAME }}/github-advanced-action-capstone:latest
+                      docker stop myapp || true
+                      docker rm myapp || true
+                      docker run -d -p 8000:8000 --name myapp ${{ vars.DOCKERHUB_USERNAME }}/github-advanced-action-capstone:latest
+                      echo " deployed successfully!"
